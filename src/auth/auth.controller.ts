@@ -33,7 +33,11 @@ export class AuthController {
         to: 'ads.hoidanit@gmail.com', // list of receivers
         subject: 'Testing Nest MailerModule ✔', // Subject line
         text: 'welcome', // plaintext body
-        html: '<b>hello world with hoidanit</b>', // HTML body content
+        template: "register",
+        context: {
+          name: "Eric",
+          activationCode: 123456789
+        }
       })
     return "ok";
   }
