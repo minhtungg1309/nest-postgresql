@@ -1,0 +1,6 @@
+-- AlterTable
+ALTER TABLE "User" ADD COLUMN     "accountType" TEXT NOT NULL DEFAULT 'LOCAL',
+ADD COLUMN     "codeExpired" TIMESTAMP(3),
+ADD COLUMN     "codeId" TEXT,
+ADD COLUMN     "isActive" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "role" TEXT NOT NULL DEFAULT 'USERS';
