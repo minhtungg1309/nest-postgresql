@@ -7,13 +7,15 @@ import { v4 as uuidv4 } from 'uuid';
 import dayjs from 'dayjs';
 import { MailerService } from '@nestjs-modules/mailer';
 import { PrismaService } from '@/prisma/prisma.service';
+import { SearchService } from '@/elasticsearch/search.service';
 
 @Injectable()
 export class UsersService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly mailerService: MailerService
+    private readonly mailerService: MailerService,
+    private readonly searchService: SearchService
   ) { }
 
   isEmailExist = async (email: string) => {
@@ -40,6 +42,10 @@ export class UsersService {
         image
       }
     })
+
+    // Index vào Elasticsearch
+    await this.searchService.indexUser(user);
+
     return {
       _id: user.id
     }
@@ -87,27 +93,27 @@ export class UsersService {
   }
 
   async findOne(id: string) {
-  const user = await this.prisma.user.findUnique({
-    where: { id },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      phone: true,
-      address: true,
-      image: true,
-      isActive: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-  });
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        address: true,
+        image: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
 
-  if (!user) {
-    throw new BadRequestException(`User với ID ${id} không tồn tại`);
+    if (!user) {
+      throw new BadRequestException(`User với ID ${id} không tồn tại`);
+    }
+
+    return user;
   }
-
-  return user;
-}
 
   async findByEmail(email: string) {
     return await this.prisma.user.findUnique({ where: { email } });
@@ -115,16 +121,59 @@ export class UsersService {
 
   async update(updateUserDto: UpdateUserDto) {
     const { _id, ...data } = updateUserDto;
-    return await this.prisma.user.update({
+    const updatedUser = await this.prisma.user.update({
       where: { id: _id },
       data
     });
+
+    // Update trong Elasticsearch
+    await this.searchService.updateUser(_id, updatedUser);
+
+    return updatedUser;
   }
 
   async remove(id: string) {
-    return await this.prisma.user.delete({
+    const deleted = await this.prisma.user.delete({
       where: { id }
     });
+
+    // Xóa khỏi Elasticsearch
+    await this.searchService.deleteUser(id);
+
+    return deleted;
+  }
+
+  // Tìm kiếm users với Elasticsearch
+  async searchUsers(
+    query: string,
+    current: number = 1,
+    pageSize: number = 10,
+    filters?: { isActive?: boolean; address?: string }
+  ) {
+    return await this.searchService.searchUsers(query, current, pageSize, filters);
+  }
+
+  // Migrate existing users to Elasticsearch
+  async migrateUsersToElasticsearch() {
+    const users = await this.prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        address: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
+      }
+    });
+
+    await this.searchService.bulkIndexUsers(users);
+
+    return {
+      message: `Migrated ${users.length} users to Elasticsearch`,
+      total: users.length
+    };
   }
 
   async handleRegister(registerDto: CreateAuthDto) {
@@ -147,6 +196,9 @@ export class UsersService {
         codeExpired: dayjs().add(5, 'minutes').toDate()
       }
     })
+
+    // Index vào Elasticsearch
+    await this.searchService.indexUser(user);
 
     this.mailerService.sendMail({
       to: user.email,
@@ -178,10 +230,14 @@ export class UsersService {
     const isBeforeCheck = dayjs().isBefore(user.codeExpired);
 
     if (isBeforeCheck) {
-      await this.prisma.user.update({
+      const updatedUser = await this.prisma.user.update({
         where: { id: data._id },
         data: { isActive: true }
       })
+
+      // Update trong Elasticsearch
+      await this.searchService.updateUser(data._id, updatedUser);
+
       return { isBeforeCheck };
     } else {
       throw new BadRequestException("Mã code không hợp lệ hoặc đã hết hạn")

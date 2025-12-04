@@ -10,6 +10,7 @@ import { TransformInterceptor } from './core/transform.interceptor';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { PrismaModule } from './prisma/prisma.module';
+import { ElasticsearchModule } from './elasticsearch/elasticsearch.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { PrismaModule } from './prisma/prisma.module';
     }),
     UsersModule,
     AuthModule,
+    ElasticsearchModule,
   ],
   controllers: [AppController],
   providers: [
