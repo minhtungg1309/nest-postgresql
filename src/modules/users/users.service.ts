@@ -86,9 +86,28 @@ export class UsersService {
     }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async findOne(id: string) {
+  const user = await this.prisma.user.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      phone: true,
+      address: true,
+      image: true,
+      isActive: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+
+  if (!user) {
+    throw new BadRequestException(`User với ID ${id} không tồn tại`);
   }
+
+  return user;
+}
 
   async findByEmail(email: string) {
     return await this.prisma.user.findUnique({ where: { email } });

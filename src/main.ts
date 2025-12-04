@@ -8,15 +8,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
   const port = configService.get('PORT');
-
-  // ======================
-  //  GLOBAL PREFIX
-  // ======================
   app.setGlobalPrefix('api/v1', { exclude: [''] });
-
-  // ======================
-  //  GLOBAL VALIDATION PIPE
-  // ======================
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -24,9 +16,6 @@ async function bootstrap() {
     }),
   );
 
-  // ======================
-  //  CORS CONFIG
-  // ======================
   app.enableCors({
     origin: true,
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
@@ -34,9 +23,6 @@ async function bootstrap() {
     credentials: true,
   });
 
-  // ======================
-  //  SWAGGER CONFIG
-  // ======================
   const swaggerConfig = new DocumentBuilder()
     .setTitle('NestJS API Documentation')
     .setDescription('Swagger UI for backend API')
@@ -49,9 +35,6 @@ async function bootstrap() {
     jsonDocumentUrl: 'api/docs-json', // optional: xuất file JSON
   });
 
-  // ======================
-  //  START SERVER
-  // ======================
   await app.listen(port);
   console.log(`🚀 Server running on http://localhost:${port}/api/v1`);
   console.log(`📄 Swagger Docs: http://localhost:${port}/api/docs`);
