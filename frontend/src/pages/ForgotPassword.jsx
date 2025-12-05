@@ -5,7 +5,6 @@ import { useNavigate, Link } from 'react-router-dom';
 import { authAPI } from '../api/services';
 
 const { Title } = Typography;
-const { Step } = Steps;
 
 const ForgotPassword = () => {
   const [loading, setLoading] = useState(false);
@@ -14,6 +13,11 @@ const ForgotPassword = () => {
   const navigate = useNavigate();
   const [emailForm] = Form.useForm();
   const [resetForm] = Form.useForm();
+
+  const steps = [
+    { title: 'Email', icon: <MailOutlined /> },
+    { title: 'Đặt lại', icon: <LockOutlined /> }
+  ];
 
   const onFinishEmail = async (values) => {
     setLoading(true);
@@ -78,10 +82,7 @@ const ForgotPassword = () => {
           Quên Mật Khẩu
         </Title>
 
-        <Steps current={currentStep} style={{ marginBottom: 30 }}>
-          <Step title="Email" icon={<MailOutlined />} />
-          <Step title="Đặt lại" icon={<LockOutlined />} />
-        </Steps>
+        <Steps current={currentStep} items={steps} style={{ marginBottom: 30 }} />
 
         {currentStep === 0 ? (
           <Form

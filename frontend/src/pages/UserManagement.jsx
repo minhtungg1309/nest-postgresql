@@ -46,7 +46,7 @@ const UserManagement = () => {
 
   useEffect(() => {
     fetchUsers();
-  }, [pagination.current, pagination.pageSize]);
+  }, [pagination.current, pagination.pageSize, searchQuery]);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -58,10 +58,10 @@ const UserManagement = () => {
       });
       
       setUsers(response.data.result || []);
-      setPagination({
-        ...pagination,
+      setPagination(prev => ({
+        ...prev,
         total: response.data.meta?.total || 0,
-      });
+      }));
     } catch (error) {
       message.error('Không thể tải danh sách người dùng!');
     } finally {
@@ -70,8 +70,7 @@ const UserManagement = () => {
   };
 
   const handleSearch = () => {
-    setPagination({ ...pagination, current: 1 });
-    fetchUsers();
+    setPagination(prev => ({ ...prev, current: 1 }));
   };
 
   const handleTableChange = (newPagination) => {

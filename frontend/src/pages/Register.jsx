@@ -6,7 +6,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { authAPI } from '../api/services';
 
 const { Title } = Typography;
-const { Step } = Steps;
 
 const Register = () => {
   const [loading, setLoading] = useState(false);
@@ -16,6 +15,11 @@ const Register = () => {
   const { register } = useAuth();
   const [form] = Form.useForm();
   const [verifyForm] = Form.useForm();
+
+  const steps = [
+    { title: 'Thông tin', icon: <UserOutlined /> },
+    { title: 'Xác thực', icon: <SafetyOutlined /> }
+  ];
 
   const onFinishRegister = async (values) => {
     setLoading(true);
@@ -83,10 +87,7 @@ const Register = () => {
           Đăng Ký
         </Title>
 
-        <Steps current={currentStep} style={{ marginBottom: 30 }}>
-          <Step title="Thông tin" icon={<UserOutlined />} />
-          <Step title="Xác thực" icon={<SafetyOutlined />} />
-        </Steps>
+        <Steps current={currentStep} items={steps} style={{ marginBottom: 30 }} />
 
         {currentStep === 0 ? (
           <Form
